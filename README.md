@@ -8,6 +8,8 @@ browser front end shows each course's status as you build the plan.
 **Stack:** Java 21+, Spring Boot 3.5, Spring Data JPA, H2 database, Maven,
 JUnit 5, JaCoCo. Front end is plain HTML/CSS/JavaScript.
 
+![Course Planner showing a plan with completed courses, two semesters, and color-coded prerequisite status](docs/screenshot.png)
+
 ## Running
 
 You need Java 21 or newer (`java -version`). Maven doesn't need to be
@@ -243,4 +245,12 @@ src/main/resources/
   catalog.json                  course data
   static/                       web front end (index.html, app.js, styles.css)
 src/test/                       unit and API tests, test catalog
+docs/screenshot.png             screenshot used above
 ```
+
+## History
+
+The project started as a Swing desktop app with a hand-written JSON parser,
+then moved to this Spring Boot backend and web front end
+([pull request #1](https://github.com/KerryFerguson04/course-planner/pull/1)).
+The desktop version is still in the history at commit `19bbe0f`.
