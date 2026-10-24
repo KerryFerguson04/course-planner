@@ -1,6 +1,7 @@
-package planner;
+package planner.domain;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -9,23 +10,23 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /** One catalog course. */
-final class Course {
+public final class Course {
     private static final Pattern NUMBER = Pattern.compile("\\d+(?:\\.\\d+)?");
 
-    final String id;
-    final String name;
-    final String descr;
-    final String credits;
-    final String preReqText;
-    final String restrict;
-    final String typ;
-    final double minCredits;
-    final double maxCredits;
+    public final String id;
+    public final String name;
+    public final String descr;
+    public final String credits;
+    public final String preReqText;
+    public final String restrict;
+    public final String typ;
+    public final double minCredits;
+    public final double maxCredits;
     /** Terms the course is normally offered, e.g. "Fall", "Spring". Empty if unknown. */
-    final Set<String> terms = new LinkedHashSet<>();
+    public final Set<String> terms;
     Prereq prereq = Prereq.NONE;
 
-    Course(Map<String, Object> json) {
+    public Course(Map<String, Object> json) {
         id = str(json, "id");
         name = str(json, "name");
         descr = str(json, "descr");
@@ -40,9 +41,15 @@ final class Course {
         minCredits = nums.isEmpty() ? 0 : nums.get(0);
         maxCredits = nums.isEmpty() ? 0 : nums.get(nums.size() - 1);
 
-        for (String t : typ.split(",")) {
-            if (!t.isBlank()) terms.add(t.trim());
+        Set<String> t = new LinkedHashSet<>();
+        for (String term : typ.split(",")) {
+            if (!term.isBlank()) t.add(term.trim());
         }
+        terms = Collections.unmodifiableSet(t);
+    }
+
+    public Prereq prereq() {
+        return prereq;
     }
 
     private static String str(Map<String, Object> json, String key) {
