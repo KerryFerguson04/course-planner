@@ -1,36 +1,37 @@
-package planner;
+package planner.domain;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-/** A student's plan: completed courses plus an ordered list of semesters. */
-final class Plan {
-    enum Status { OK, WARN, ERROR }
+/**
+ * A student's plan: completed courses plus an ordered list of semesters.
+ * This is the in-memory model the prerequisite checks run against; the
+ * database copy lives in {@code planner.persistence}.
+ */
+public final class Plan {
+    public enum Status { OK, WARN, ERROR }
 
-    record Check(Status status, List<String> messages) {}
+    public record Check(Status status, List<String> messages) {}
 
-    static final class Semester {
-        String name;
-        final List<String> courses = new ArrayList<>();
+    public static final class Semester {
+        public final String name;
+        public final List<String> courses = new ArrayList<>();
 
-        Semester(String name) {
+        public Semester(String name) {
             this.name = name;
         }
     }
 
     private static final List<String> TERMS = List.of("Fall", "Winter", "Spring", "Summer");
 
-    final Set<String> completed = new LinkedHashSet<>();
-    final List<Semester> semesters = new ArrayList<>();
+    public final Set<String> completed = new LinkedHashSet<>();
+    public final List<Semester> semesters = new ArrayList<>();
 
     /** Checks one course in a semester against everything taken before it. */
-    Check check(Catalog catalog, int semIndex, String courseId) {
+    public Check check(Catalog catalog, int semIndex, String courseId) {
         Course c = catalog.get(courseId);
         if (c == null) return new Check(Status.WARN, List.of("Not found in catalog"));
         Semester sem = semesters.get(semIndex);
@@ -73,10 +74,10 @@ final class Plan {
     }
 
     /** How a catalog course relates to the plan, for the search-result badges. */
-    enum Availability { IN_PLAN, READY, CHECK, LOCKED }
+    public enum Availability { IN_PLAN, READY, CHECK, LOCKED }
 
     /** Whether a course could be taken after everything currently in the plan. */
-    Availability availability(Catalog catalog, String courseId) {
+    public Availability availability(Catalog catalog, String courseId) {
         Set<String> have = allPlanned();
         if (have.contains(courseId)) return Availability.IN_PLAN;
         Course c = catalog.get(courseId);
@@ -91,7 +92,7 @@ final class Plan {
     }
 
     /** Required prerequisites not covered anywhere in the plan, e.g. "MATH 241 or MATH 242". */
-    List<String> missing(Catalog catalog, String courseId) {
+    public List<String> missing(Catalog catalog, String courseId) {
         Course c = catalog.get(courseId);
         if (c == null) return List.of();
         Set<String> have = allPlanned();
@@ -129,7 +130,7 @@ final class Plan {
     }
 
     /** Credit total for a list of courses as "12" or "12–15" for variable-credit courses. */
-    static String creditTotal(Catalog catalog, Iterable<String> courseIds) {
+    public static String creditTotal(Catalog catalog, Iterable<String> courseIds) {
         double min = 0, max = 0;
         for (String id : courseIds) {
             Course c = catalog.get(id);
@@ -145,7 +146,7 @@ final class Plan {
     }
 
     /** Suggests the semester after the given one, e.g. "Fall 2026" -> "Spring 2027". */
-    static String nextTermName(String previous) {
+    public static String nextTermName(String previous) {
         if (previous == null) return "Fall 2026";
         String[] parts = previous.trim().split("\\s+");
         if (parts.length == 2 && parts[1].matches("\\d{4}")) {
@@ -158,48 +159,5 @@ final class Plan {
             }
         }
         return "";
-    }
-
-    // File format, one line each:
-    //   COMPLETED|ACCT 207|ACCT 208
-    //   SEMESTER|Fall 2026|MATH 241|CHEM 103
-
-    void save(Path path) throws IOException {
-        List<String> lines = new ArrayList<>();
-        lines.add("# Course plan");
-        lines.add(join("COMPLETED", completed));
-        for (Semester s : semesters) lines.add(join("SEMESTER|" + s.name, s.courses));
-        Files.write(path, lines);
-    }
-
-    private static String join(String head, Iterable<String> ids) {
-        StringBuilder sb = new StringBuilder(head);
-        for (String id : ids) sb.append('|').append(id);
-        return sb.toString();
-    }
-
-    static Plan load(Path path) throws IOException {
-        Plan plan = new Plan();
-        for (String line : Files.readAllLines(path)) {
-            if (line.isBlank() || line.startsWith("#")) continue;
-            String[] parts = line.split("\\|", -1);
-            switch (parts[0]) {
-                case "COMPLETED" -> {
-                    for (int k = 1; k < parts.length; k++) {
-                        if (!parts[k].isBlank()) plan.completed.add(parts[k].trim());
-                    }
-                }
-                case "SEMESTER" -> {
-                    if (parts.length < 2) throw new IOException("Semester line has no name: " + line);
-                    Semester s = new Semester(parts[1].trim());
-                    for (int k = 2; k < parts.length; k++) {
-                        if (!parts[k].isBlank()) s.courses.add(parts[k].trim());
-                    }
-                    plan.semesters.add(s);
-                }
-                default -> throw new IOException("Unrecognized line: " + line);
-            }
-        }
-        return plan;
     }
 }

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Course Planner</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>Course Planner</h1>
+    <div class="plan-controls">
+      <label for="plan-select">Plan</label>
+      <select id="plan-select"></select>
+      <button id="new-plan" type="button">New plan</button>
+      <button id="rename-plan" type="button">Rename</button>
+      <button id="delete-plan" type="button" class="danger">Delete</button>
+    </div>
+    <ul class="legend" aria-label="Legend">
+      <li><span class="swatch ok"></span>Prereqs met</li>
+      <li><span class="swatch warn"></span>Check manually</li>
+      <li><span class="swatch error"></span>Missing prereq</li>
+    </ul>
+  </header>
+
+  <main class="layout">
+    <section class="catalog" aria-label="Course catalog">
+      <input id="search" type="search" placeholder="Search by code (math 2) or title…" autocomplete="off">
+      <p id="result-count" class="muted"></p>
+      <ul id="results" class="results"></ul>
+      <button id="add-selected" type="button" class="primary" disabled>Add selected course</button>
+      <p class="muted tip">Drag a course onto any semester, or double-click to add it to the highlighted one.</p>
+      <article id="details" class="details">
+        <p class="muted">Select a course to see its details.</p>
+      </article>
+    </section>
+
+    <section class="board-wrap" aria-label="Your plan">
+      <div id="board" class="board"></div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="alert" hidden></div>
+  <script src="app.js"></script>
+</body>
+</html>
